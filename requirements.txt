@@ -1,0 +1,13 @@
+openai
+python-dotenv
+sounddevice
+numpy
+spacy
+Pillow
+requests
+python-vlc
+opencv-python
+pygame
+whisper
+torch
+transformers

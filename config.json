@@ -1,0 +1,12 @@
+{
+    "video_queue_file": "playlist.json",
+    "fallback_videos": ["fallback1.mp4", "fallback2.mp4"],
+    "video_loop_duration": 10,
+    "retry_interval": 5,
+    "audio_device_index": 0,
+    "sample_rate": 44100,
+    "channels": 1,
+    "chunk_size": 1024,
+    "record_seconds": 5,
+    "display_output": ":1"
+}
