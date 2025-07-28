@@ -1,8 +1,8 @@
-🌀 AI-Powered Landscape Experience: Field of Vision README
+<b>🌀 AI-Powered Landscape Experience: Field of Vision README</b>
 <br>
 This guide walks you through setting up an interactive, generative art system in which visitor speech drives the creation of dynamic AI landscapes that evolve into ambient moving visuals. The full experience culminates in a continuously playing, immersive projection.
 <p></p>
-🎯 System Overview
+<b>🎯 System Overview</b>
 <br>
 Visitor Onboarding Visitors hear onboarding instructions that explain how to “speak to the AI” to create images.
 Speech to Prompt Parsing Visitors speak into a microphone. Speech is transcribed to text, and key promptable language (e.g., “misty mountains at dusk”) is extracted using NLP parsing.
@@ -13,7 +13,8 @@ Local Storage & Queuing The resulting video is saved locally and added to a vi
 Full-Screen Playback The video player runs in fullscreen mode, looping through ambient videos. When needed, it can randomly re-loop previous videos while new ones generate.
 Projection/Display Output is mirrored or projected for immersive installation viewing.
 <p></p>
-🧰 Requirements
+<b>🧰 Requirements</b>
+<br>
 Software
 Speech-to-Text API (e.g., Google Speech, Whisper)
 NLP Parser for extracting promptable content (e.g., spaCy, GPT)
@@ -28,7 +29,8 @@ Secondary display / projector
 GPU acceleration (for local inference, optional but recommended)
 Sufficient local storage (for saved videos)
 <p></p>
-🔧 Installation & Setup
+<b>🔧 Installation & Setup</b>
+<br>
 1. Onboarding Audio
 Record or synthesize a voice prompt explaining how to speak to the AI (e.g., “Say something like ‘a moonlit desert at night’…”).
 Loop this audio until user input is detected.
@@ -54,11 +56,12 @@ Run a fullscreen media player in loop mode.
 Optionally use Python with OpenCV/Pygame, or a script that manages VLC or MPV.
 Mirror or route to projector/screen.
 <p></p>
-♻️ Runtime Architecture
+<b>♻️ Runtime Architecture</b>
 <br>
 flowchart LR     A[Visitor speaks] --> B[Speech-to-text]     B --> C[NLP Prompt Extractor]     C --> D[AI Image Generation]     D --> E[Video Synthesis API]     E --> F[Save Video Locally]     F --> G[Add to Video Queue]     G --> H[Video Player (Fullscreen)]     H --> I[Projection Output]
 <p></p>
-📂 Configuration Templates
+<b>📂 Configuration Templates</b>
+<br>
 .env (Environment Variables)
 WHISPER_API_KEY=your_whisper_key
 OPENAI_API_KEY=your_openai_key
@@ -72,8 +75,8 @@ config.json (Queue Manager Settings)
   "video_loop_duration": 10,
   "retry_interval": 5
 }
-
-🛋️ Packaging for Deployment
+<p></p>
+<b>🛋️ Packaging for Deployment</b>
 <br>
 Dockerfile (For MCP Controller)
 FROM python:3.10-slim
@@ -96,8 +99,8 @@ run.sh (Launch Script)
 #!/bin/bash
 export $(grep -v '^#' .env | xargs)
 python main.py
-
-🔧 Suggested Scripts
+<p></p>
+<b>🔧 Suggested Scripts</b>
 <br>
 main.py: Orchestrates entire pipeline
 audio_listener.py: Captures mic input and saves audio
@@ -108,15 +111,15 @@ video_gen.py: Sends image to video-generation API
 queue_manager.py: Adds file to JSON queue
 video_player.py: Plays videos from playlist in fullscreen loop
 
-
-🥪 Development Tips
+<p></p>
+<b>🥪 Development Tips</b>
 <br>
 Test each pipeline module independently before integration.
 Pre-load a few ambient videos for fallback.
 Cache recent prompts to avoid repeat generations.
 Consider using SSD storage for faster video read/write.
-
-🚀 Future Enhancements
+<p></p>
+<b>🚀 Future Enhancements</b>
 <br>
 Allow visitor to choose between themes (e.g., “dreamy,” “chaotic”).
 Add ambient audio generation to match visuals.
