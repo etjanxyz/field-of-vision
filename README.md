@@ -4,14 +4,14 @@ This guide walks you through setting up an interactive, generative art system in
 <p></p>
 <b>🎯 System Overview</b>
 <br>
-Visitor OnboardingVisitors hear onboarding instructions that explain how to “speak to the AI” to create images.
-Speech to Prompt ParsingVisitors speak into a microphone. Speech is transcribed to text, and key promptable language (e.g., “misty mountains at dusk”) is extracted using NLP parsing.
+Visitor Onboarding Visitors hear onboarding instructions that explain how to “speak to the AI” to create images.
+Speech to Prompt Parsing Visitors speak into a microphone. Speech is transcribed to text, and key promptable language (e.g., “misty mountains at dusk”) is extracted using NLP parsing.
 <br>
-Image GenerationThe parsed prompt is fed into an AI image generator (e.g., DALL·E, Stable Diffusion) to produce a landscape image.
-Video SynthesisThe static image is sent to a video-generation API (e.g., RunwayML Gen-2, Pika, or Kaiber) to create a short, animated ambient loop.
-Local Storage & QueuingThe resulting video is saved locally and added to a video player’s playlist queue.
-Full-Screen PlaybackThe video player runs in fullscreen mode, looping through ambient videos. When needed, it can randomly re-loop previous videos while new ones generate.
-Projection/DisplayOutput is mirrored or projected for immersive installation viewing.
+Image Generation The parsed prompt is fed into an AI image generator (e.g., DALL·E, Stable Diffusion) to produce a landscape image.
+Video Synthesis The static image is sent to a video-generation API (e.g., RunwayML Gen-2, Pika, or Kaiber) to create a short, animated ambient loop.
+Local Storage & Queuing The resulting video is saved locally and added to a video player’s playlist queue.
+Full-Screen Playback The video player runs in fullscreen mode, looping through ambient videos. When needed, it can randomly re-loop previous videos while new ones generate.
+Projection/Display Output is mirrored or projected for immersive installation viewing.
 <p></p>
 <b>🧰 Requirements</b>
 <br>
@@ -58,7 +58,7 @@ Mirror or route to projector/screen.
 <p></p>
 <b>♻️ Runtime Architecture</b>
 <br>
-flowchart LR    A[Visitor speaks] --> B[Speech-to-text]    B --> C[NLP Prompt Extractor]    C --> D[AI Image Generation]    D --> E[Video Synthesis API]    E --> F[Save Video Locally]    F --> G[Add to Video Queue]    G --> H[Video Player (Fullscreen)]    H --> I[Projection Output]
+flowchart LR     A[Visitor speaks] --> B[Speech-to-text]     B --> C[NLP Prompt Extractor]     C --> D[AI Image Generation]     D --> E[Video Synthesis API]     E --> F[Save Video Locally]     F --> G[Add to Video Queue]     G --> H[Video Player (Fullscreen)]     H --> I[Projection Output]
 <p></p>
 <b>📂 Configuration Templates</b>
 <br>
