@@ -8,6 +8,7 @@ requests
 python-vlc
 opencv-python
 pygame
-whisper
+openai-whisper
 torch
 transformers
+diffusers
