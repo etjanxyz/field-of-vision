@@ -61,8 +61,8 @@ class FieldOfVision:
                 if not image_path:
                     continue
 
-                # Generate video
-                video_path = self.video_generator.generate(image_path)
+                # Generate video using the same prompt that was used for the image
+                video_path = self.video_generator.generate(image_path, prompt)
                 if not video_path:
                     continue
 
