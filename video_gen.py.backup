@@ -1,0 +1,222 @@
+import os
+import time
+import json
+import base64
+import logging
+import requests
+from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
+load_dotenv()
+
+RUNWAY_API = "https://api.dev.runwayml.com/v1"
+RUNWAY_VERSION = "2024-11-06"
+
+class VideoGenerator:
+    def __init__(self):
+        self.api_key = os.getenv("RUNWAY_API_SECRET")
+        if not self.api_key:
+            logger.error("No RUNWAY_API_SECRET found in environment variables")
+        self.save_dir = os.getenv("SAVE_DIRECTORY", "./generated_videos")
+        
+        # Motion prompt mappings for different scene types
+        self.motion_mappings = {
+            # Nature and Weather
+            'snow': ['Gentle snowfall drifting down softly', 'Snowflakes falling slowly through the air', 'Light snow falling in a peaceful scene'],
+            'rain': ['Rain droplets falling gently', 'Light rainfall creating ripples', 'Soft rain streaming down'],
+            'forest': ['Leaves gently swaying in the breeze', 'Tree branches moving softly', 'Forest canopy shifting in wind'],
+            'mist': ['Mist slowly rolling across the scene', 'Fog swirling gently', 'Ethereal mist drifting'],
+            'clouds': ['Clouds slowly drifting across the sky', 'Cloud formations morphing gradually', 'Sky slowly changing'],
+            
+            # Water Features
+            'lake': ['Water rippling softly', 'Gentle waves lapping at the shore', 'Surface of the lake moving subtly'],
+            'ocean': ['Waves rolling in rhythmically', 'Ocean surface undulating', 'Water moving with gentle swells'],
+            'river': ['Water flowing smoothly', 'River current moving steadily', 'Gentle stream flowing'],
+            'waterfall': ['Water cascading down', 'Waterfall flowing continuously', 'Water streaming down rocks'],
+            
+            # Time of Day
+            'sunset': ['Sky gradually changing colors', 'Sun slowly setting with color shifts', 'Evening light transitioning'],
+            'sunrise': ['Dawn light gradually increasing', 'Morning sun slowly rising', 'Early light emerging'],
+            'night': ['Stars twinkling in the sky', 'Moonlight creating subtle movement', 'Night sky slowly shifting'],
+            
+            # Atmospheric
+            'wind': ['Elements moving in the breeze', 'Wind effects on the landscape', 'Gentle wind movement'],
+            'storm': ['Storm clouds building', 'Weather effects intensifying', 'Dramatic atmospheric movement'],
+            'sunny': ['Heat waves rising subtly', 'Sunlight shifting through scene', 'Warm light movement']
+        }
+        
+        # Create save directory if it doesn't exist
+        os.makedirs(self.save_dir, exist_ok=True)
+
+    def _get_motion_prompt(self, scene_description: str) -> str:
+        """
+        Generate a contextual motion prompt based on the scene description
+        """
+        scene_description = scene_description.lower()
+        motion_prompts = []
+        
+        # Check each keyword in our mappings
+        for keyword, prompts in self.motion_mappings.items():
+            if keyword in scene_description:
+                import random
+                motion_prompts.append(random.choice(prompts))
+        
+        # If no specific matches found, use a default subtle motion
+        if not motion_prompts:
+            motion_prompts = ['Subtle natural movement in the scene']
+            
+        # Combine prompts and add general guidance
+        combined_prompt = f"{' '.join(motion_prompts)}. Maintain photorealistic quality with smooth transitions."
+        logger.info(f"Generated motion prompt: {combined_prompt}")
+        return combined_prompt
+
+    def generate(self, image_path, scene_description):
+        """
+        Generate video from image using Runway Gen-3 Turbo API
+        Falls back to simple pan/zoom effect if API fails
+        """
+        try:
+            if not self.api_key:
+                logger.error("Cannot generate video: No Runway API key configured")
+                return self._generate_fallback(image_path)
+                
+            return self._generate_runway(image_path, scene_description) or self._generate_fallback(image_path)
+        except Exception as e:
+            logger.exception(f"Error generating video: {e}")
+            return None
+
+    def _headers(self):
+        """Get headers for Runway API requests"""
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "X-Runway-Version": RUNWAY_VERSION,
+        }
+
+    def _generate_runway(self, image_path, scene_description):
+        """Generate video using Runway Gen-3 Turbo API with contextual motion"""
+        try:
+            # 1) Build motion text
+            prompt_text = self._get_motion_prompt(scene_description)
+
+            # 2) Encode the image as a data URL
+            with open(image_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+            data_uri = f"data:image/png;base64,{b64}"
+
+            # 3) Create the task
+            payload = {
+                "model": "gen3a_turbo",
+                "promptImage": data_uri,
+                "promptText": prompt_text,
+                "duration": 5,
+                "ratio": "1280:768"
+            }
+
+            logger.info("Submitting image_to_video task to Runway...")
+            r = requests.post(
+                f"{RUNWAY_API}/image_to_video",
+                headers=self._headers(),
+                json=payload,
+                timeout=60
+            )
+            
+            if r.status_code != 200:
+                logger.error(f"Runway create failed [{r.status_code}]: {r.text}")
+                return None
+
+            task_id = r.json().get("id")
+            if not task_id:
+                logger.error(f"No task id in response: {r.text}")
+                return None
+
+            # 4) Poll the task until it finishes
+            logger.info(f"Task created: {task_id}. Polling for completion...")
+            backoff = 1.0
+            for _ in range(120):  # ~2 minutes max
+                tr = requests.get(
+                    f"{RUNWAY_API}/tasks/{task_id}",
+                    headers=self._headers(),
+                    timeout=30
+                )
+                
+                if tr.status_code != 200:
+                    logger.warning(f"Task poll failed [{tr.status_code}]: {tr.text}")
+                else:
+                    td = tr.json()
+                    status = td.get("status")
+                    
+                    if status == "SUCCEEDED":
+                        outputs = td.get("output") or []
+                        if not outputs:
+                            logger.error(f"Task succeeded but no outputs: {json.dumps(td)[:500]}")
+                            return None
+                            
+                        video_url = outputs[0]
+                        logger.info(f"Downloading video: {video_url}")
+                        vr = requests.get(video_url, timeout=120)
+                        
+                        if vr.status_code != 200:
+                            logger.error(f"Video download failed [{vr.status_code}]")
+                            return None
+                            
+                        save_path = os.path.join(self.save_dir, f"generated_{len(os.listdir(self.save_dir))}.mp4")
+                        with open(save_path, "wb") as f:
+                            f.write(vr.content)
+                            
+                        logger.info("Successfully generated video.")
+                        return save_path
+                        
+                    elif status in {"FAILED", "CANCELED", "CANCELLED"}:
+                        logger.error(f"Runway task ended with status: {status}")
+                        return None
+                    # else RUNNING / QUEUED / etc.
+                    
+                time.sleep(backoff)
+                backoff = min(backoff * 1.5, 5.0)
+
+            logger.error("Timed out waiting for Runway task to finish.")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error with Runway API: {str(e)}")
+            logger.exception("Full traceback:")
+            return None
+
+    def _generate_fallback(self, image_path):
+        """
+        Generate a simple pan and zoom effect video using OpenCV
+        This is used as a fallback when the API fails
+        """
+        try:
+            import cv2
+            import numpy as np
+            
+            # Read image
+            img = cv2.imread(image_path)
+            if img is None:
+                logger.error(f"Failed to read image: {image_path}")
+                return None
+                
+            height, width = img.shape[:2]
+            
+            # Create video writer
+            save_path = os.path.join(self.save_dir, f"generated_{len(os.listdir(self.save_dir))}.mp4")
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(save_path, fourcc, 30.0, (width, height))
+            
+            # Generate simple ken burns effect
+            zoom_factor = 1.0
+            for i in range(150):  # 5 seconds at 30fps
+                zoom_factor += 0.001
+                M = cv2.getRotationMatrix2D((width/2, height/2), 0, zoom_factor)
+                frame = cv2.warpAffine(img, M, (width, height))
+                out.write(frame)
+                
+            out.release()
+            logger.info("Generated fallback video with Ken Burns effect")
+            return save_path
+            
+        except Exception as e:
+            logger.error(f"Error generating fallback video: {str(e)}")
+            return None

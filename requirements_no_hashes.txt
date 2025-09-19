@@ -1,0 +1,11 @@
+--no-binary :all:
+urllib3>=2.0.0
+certifi>=2023.7.22
+requests>=2.31.0
+openai>=1.0.0
+python-dotenv>=1.0.0
+sounddevice>=0.4.6
+numpy>=1.26.0
+pillow>=10.0.0
+pygame>=2.5.0
+python-vlc>=3.0.20123

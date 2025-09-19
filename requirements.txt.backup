@@ -1,0 +1,9 @@
+openai
+python-dotenv
+sounddevice
+numpy
+pillow
+pygame
+python-vlc
+dotenv
+opencv-python

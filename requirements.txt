@@ -1,0 +1,10 @@
+openai
+python-dotenv
+sounddevice
+numpy
+pillow
+pygame
+python-vlc
+dotenv
+opencv-python
+setuptools<81.0  # Pin setuptools to avoid pkg_resources warning

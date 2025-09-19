@@ -1,0 +1,6 @@
+WHISPER_API_KEY=your_whisper_key
+OPENAI_API_KEY=your_openai_key
+RUNWAY_API_SECRET=your_video_gen_key
+SAVE_DIRECTORY=./generated_videos
+PROJECTOR_DISPLAY=:1
+TOKENIZERS_PARALLELISM=false
